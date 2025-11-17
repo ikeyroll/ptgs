@@ -217,7 +217,7 @@ export default function AdminPanel() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Panel Admin</h1>
-            <p className="text-muted-foreground">Pengurusan Permohonan Pelekat OKU</p>
+            <p className="text-muted-foreground">Pengurusan Peralatan ICT & Pendaftaran</p>
           </div>
 
           {/* Search & Filters */}
@@ -228,7 +228,7 @@ export default function AdminPanel() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <Label>Cari (No Rujukan, No Siri, IC, Nama)</Label>
+                  <Label>Cari (No Rujukan, No Siri, Nama)</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
