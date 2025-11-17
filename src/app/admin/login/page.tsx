@@ -53,9 +53,9 @@ export default function AdminLogin() {
           </div>
           <CardTitle className="text-2xl">Admin Login</CardTitle>
           <CardDescription>
-            Majlis Perbandaran Hulu Selangor
+            Pejabat Tanah dan Galian Selangor
             <br />
-            Sistem e-Stiker Khas
+            Sistem Peralatan ICT & Pendaftaran
           </CardDescription>
         </CardHeader>
         <CardContent>
