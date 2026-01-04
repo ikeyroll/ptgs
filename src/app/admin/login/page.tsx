@@ -43,8 +43,8 @@ export default function AdminLogin() {
           <div className="flex justify-center mb-4">
             <div className="relative h-20 w-20">
               <Image
-                src="/mphs.png"
-                alt="MPHS Logo"
+                src="/ptgs.png"
+                alt="PTGS Logo"
                 width={80}
                 height={80}
                 className="object-contain"

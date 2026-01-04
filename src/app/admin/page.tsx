@@ -13,12 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Download, Eye, CheckCircle, XCircle, Calendar, FileText, Image as ImageIcon } from 'lucide-react';
+import { Search, Download, Eye, CheckCircle, XCircle, Calendar, FileText, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateNoSiri } from '@/lib/generateNoSiri';
 import { exportWithDateRange } from '@/lib/csvExport';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getApplications, updateApplication } from '@/lib/api/applications';
+import { getApplications, updateApplication, approveApplication, rejectApplication } from '@/lib/api/applications';
  
 import type { Application } from '@/lib/supabase';
 
@@ -174,11 +174,54 @@ export default function AdminPanel() {
       : <Badge variant="outline" className="bg-purple-50 text-purple-700">Pembaharuan</Badge>;
   };
 
-  // Notes-only workflow: no rejection word count
-  // Keep stubs to satisfy any legacy references in UI
-  const handleApprove = () => {};
-  const handleReject = () => {};
-  const wordCount = 0;
+  // Handle approve
+  const handleApprove = async () => {
+    if (!selectedApp) return;
+    try {
+      await approveApplication(selectedApp.id);
+      toast.success('Permohonan telah diluluskan!');
+      setShowApproveModal(false);
+      loadApplications();
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal meluluskan permohonan');
+    }
+  };
+
+  // Handle reject
+  const handleReject = async () => {
+    if (!selectedApp || !rejectionNotes.trim()) return;
+    if (wordCount > 80) {
+      toast.error('Catatan melebihi 80 perkataan');
+      return;
+    }
+    try {
+      await rejectApplication(selectedApp.id, rejectionNotes);
+      toast.success('Permohonan telah ditolak');
+      setShowRejectModal(false);
+      setRejectionNotes('');
+      loadApplications();
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menolak permohonan');
+    }
+  };
+
+  // Handle delete
+  const handleDelete = async (app: Application) => {
+    if (!confirm(`Adakah anda pasti untuk memadam permohonan ${app.ref_no}?`)) return;
+    try {
+      const { error } = await (await import('@/lib/supabase')).supabase
+        .from('applications')
+        .delete()
+        .eq('id', app.id);
+      if (error) throw error;
+      toast.success('Permohonan telah dipadam');
+      loadApplications();
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal memadam permohonan');
+    }
+  };
+
+  const wordCount = rejectionNotes.trim().split(/\s+/).filter(w => w.length > 0).length;
 
   return (
     <>
@@ -333,23 +376,32 @@ export default function AdminPanel() {
                           <TableCell>{getStatusBadge(app.status)}</TableCell>
                           <TableCell>{new Date(app.submitted_date).toLocaleDateString('ms-MY')}</TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedApp(app);
-                                try {
-                                  const p = typeof app.pemohon === 'string' ? JSON.parse(app.pemohon) : app.pemohon;
-                                  // ensure selectedApp has parsed pemohon
-                                  setAdminNoteDraft(app.admin_notes || '');
-                                } catch {
-                                  setAdminNoteDraft(app.admin_notes || '');
-                                }
-                                setShowDetailModal(true);
-                              }}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedApp(app);
+                                  try {
+                                    const p = typeof app.pemohon === 'string' ? JSON.parse(app.pemohon) : app.pemohon;
+                                    setAdminNoteDraft(app.admin_notes || '');
+                                  } catch {
+                                    setAdminNoteDraft(app.admin_notes || '');
+                                  }
+                                  setShowDetailModal(true);
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDelete(app)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -401,6 +453,33 @@ export default function AdminPanel() {
                 </div>
               )}
 
+              {/* Approve/Reject Buttons */}
+              {selectedApp.status === 'Dalam Proses' && (
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setShowApproveModal(true);
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Luluskan
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setShowRejectModal(true);
+                    }}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Tolak
+                  </Button>
+                </div>
+              )}
+
               <div className="p-4 bg-blue-50 border-l-4 border-l-blue-500 rounded">
                 <h4 className="font-semibold text-blue-800 mb-2">Catatan Admin</h4>
                 <textarea
@@ -414,10 +493,10 @@ export default function AdminPanel() {
                     if (!selectedApp) return;
                     try {
                       const updated = await updateApplication(selectedApp.id, { admin_notes: adminNoteDraft });
-                      // Reflect in local selectedApp
                       setSelectedApp({ ...selectedApp, admin_notes: updated.admin_notes } as any);
+                      toast.success('Nota telah disimpan');
                     } catch (e) {
-                      // ignore
+                      toast.error('Gagal menyimpan nota');
                     }
                   }}>Simpan Nota</Button>
                 </div>
@@ -521,15 +600,19 @@ export default function AdminPanel() {
               Adakah anda pasti untuk meluluskan permohonan ini?
             </DialogDescription>
           </DialogHeader>
-          {selectedApp && (
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-blue-700">No. Rujukan: <span className="font-semibold">{selectedApp.ref_no}</span></p>
-                <p className="text-sm text-blue-700">Nama: <span className="font-semibold">{selectedApp.pemohon.name}</span></p>
-                <p className="text-sm text-blue-700 mt-2">No. Siri: <span className="font-mono font-semibold">{selectedApp.no_siri || 'Akan dijana'}</span></p>
+          {selectedApp && (() => {
+            const pemohon = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon;
+            const assets = Array.isArray(pemohon?.assets) ? pemohon.assets.join(', ') : '-';
+            return (
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded">
+                  <p className="text-sm text-blue-700">No. Rujukan: <span className="font-semibold">{selectedApp.ref_no}</span></p>
+                  <p className="text-sm text-blue-700">Nama: <span className="font-semibold">{pemohon?.name || '-'}</span></p>
+                  <p className="text-sm text-blue-700 mt-2">Aset yang Dipinjam: <span className="font-semibold">{assets}</span></p>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowApproveModal(false)}>Batal</Button>
             <Button onClick={handleApprove}>
@@ -553,7 +636,10 @@ export default function AdminPanel() {
             <div className="space-y-4">
               <div className="p-4 bg-red-50 border border-red-200 rounded">
                 <p className="text-sm text-red-700">No. Rujukan: <span className="font-semibold">{selectedApp.ref_no}</span></p>
-                <p className="text-sm text-red-700">Nama: <span className="font-semibold">{selectedApp.pemohon.name}</span></p>
+                <p className="text-sm text-red-700">Nama: <span className="font-semibold">{(() => {
+                  const p = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon;
+                  return p?.name || '-';
+                })()}</span></p>
               </div>
               
               <div>

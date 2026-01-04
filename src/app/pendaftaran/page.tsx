@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createApplication, generateRefNumber, uploadFile } from '@/lib/api/applications';
 
@@ -26,6 +28,9 @@ export default function PendaftaranPage() {
 
   // Documents
   const [docs, setDocs] = useState<FileList | null>(null);
+  
+  // Success dialog
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('applicantEmail');
@@ -96,8 +101,13 @@ export default function PendaftaranPage() {
         submitted_date: new Date().toISOString(),
       } as any);
 
-      // Back to homepage
-      router.push('/');
+      // Show success dialog
+      setShowSuccess(true);
+      
+      // Redirect to home after 2 seconds
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
     } catch (err) {
       console.error(err);
       alert('Ralat semasa menghantar permohonan.');
@@ -119,31 +129,31 @@ export default function PendaftaranPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-mel</Label>
+                  <Label htmlFor="email">E-mel <span className="text-red-600">*</span></Label>
                   <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
 
                 {/* Nama */}
                 <div className="space-y-2">
-                  <Label htmlFor="nama">Nama</Label>
+                  <Label htmlFor="nama">Nama <span className="text-red-600">*</span></Label>
                   <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} required />
                 </div>
 
                 {/* Bahagian */}
                 <div className="space-y-2">
-                  <Label htmlFor="bahagian">Bahagian</Label>
+                  <Label htmlFor="bahagian">Bahagian <span className="text-red-600">*</span></Label>
                   <Input id="bahagian" value={bahagian} onChange={(e) => setBahagian(e.target.value)} required />
                 </div>
 
                 {/* Tarikh Permohonan */}
                 <div className="space-y-2">
-                  <Label htmlFor="tarikh">Tarikh Permohonan</Label>
+                  <Label htmlFor="tarikh">Tarikh Permohonan <span className="text-red-600">*</span></Label>
                   <Input id="tarikh" type="date" value={tarikhPermohonan} onChange={(e) => setTarikhPermohonan(e.target.value)} required />
                 </div>
 
                 {/* Aset (Multi-select via checkboxes) */}
                 <div className="space-y-2">
-                  <Label>Aset</Label>
+                  <Label>Aset <span className="text-red-600">*</span></Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {asetOptions.map((opt) => (
                       <label key={opt} className="flex items-center gap-2 text-sm">
@@ -160,7 +170,7 @@ export default function PendaftaranPage() {
 
                 {/* Justifikasi */}
                 <div className="space-y-2">
-                  <Label htmlFor="justifikasi">Justifikasi</Label>
+                  <Label htmlFor="justifikasi">Justifikasi <span className="text-red-600">*</span></Label>
                   <textarea
                     id="justifikasi"
                     value={justifikasi}
@@ -172,7 +182,7 @@ export default function PendaftaranPage() {
 
                 {/* PTGS / eTanah */}
                 <div className="space-y-2">
-                  <Label>Jenis Pengguna</Label>
+                  <Label>Jenis Pengguna <span className="text-red-600">*</span></Label>
                   <div className="flex gap-4 text-sm">
                     <label className="flex items-center gap-2">
                       <input type="radio" name="userType" value="PTGS" checked={userType==='PTGS'} onChange={() => setUserType('PTGS')} />
@@ -188,14 +198,14 @@ export default function PendaftaranPage() {
                 {/* Peranan (if eTanah) */}
                 {userType === 'eTanah' && (
                   <div className="space-y-2">
-                    <Label htmlFor="peranan">Peranan (eTanah)</Label>
+                    <Label htmlFor="peranan">Peranan (eTanah) <span className="text-red-600">*</span></Label>
                     <Input id="peranan" value={peranan} onChange={(e) => setPeranan(e.target.value)} required />
                   </div>
                 )}
 
                 {/* Upload Dokumen */}
                 <div className="space-y-2">
-                  <Label htmlFor="docs">Muat Naik Dokumen (opsyenal)</Label>
+                  <Label htmlFor="docs">Muat Naik Dokumen (optional)</Label>
                   <Input id="docs" type="file" multiple onChange={(e) => setDocs(e.target.files)} />
                 </div>
 
@@ -208,6 +218,25 @@ export default function PendaftaranPage() {
         </div>
       </main>
       <Footer />
+      
+      {/* Success Dialog */}
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl">Berjaya!</DialogTitle>
+            <DialogDescription className="text-center text-base">
+              Pendaftaran anda telah berjaya dihantar.
+              <br />
+              Anda akan dikembalikan ke halaman utama.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

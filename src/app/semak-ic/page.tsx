@@ -222,8 +222,8 @@ export default function SemakIC() {
             <div className="flex justify-center mb-6">
               <div className="relative w-32 h-32 sm:w-40 sm:h-40">
                 <Image
-                  src="/mphs.png"
-                  alt="Logo MPHS"
+                  src="/ptgs.png"
+                  alt="Logo PTGS"
                   fill
                   className="object-contain"
                   priority

@@ -191,34 +191,43 @@ export async function updateApplication(id: string, updates: Partial<Application
 // Approve application (generates No Siri)
 export async function approveApplication(id: string) {
   const year = new Date().getFullYear();
-  // Enforce per-session capacity before generating No Siri
-  const [capacity, issued] = await Promise.all([
-    getSessionCapacity(year),
-    getIssuedCount(year),
-  ]);
-  if (issued >= capacity) {
-    throw new Error(`Kapasiti sesi ${year} telah penuh (${capacity}). Capacity for session ${year} is full.`);
+  
+  // Get count of approved applications this year to generate sequence
+  const { data: approvedApps, error: countError } = await supabase
+    .from('applications')
+    .select('no_siri')
+    .not('no_siri', 'is', null)
+    .like('no_siri', `MPHS/${year}/%`)
+    .order('no_siri', { ascending: false });
+  
+  if (countError) throw countError;
+  
+  // Calculate next sequence number
+  let nextSequence = 1;
+  if (approvedApps && approvedApps.length > 0) {
+    const lastNoSiri = approvedApps[0].no_siri;
+    const lastSequence = parseInt(lastNoSiri.split('/')[2]);
+    nextSequence = lastSequence + 1;
   }
   
-  // Call function to generate No Siri
-  const { data: noSiriData, error: noSiriError } = await supabase
-    .rpc('generate_no_siri', { p_year: year });
+  // Check capacity limit (350 per year)
+  if (nextSequence > 350) {
+    throw new Error(`Kapasiti sesi ${year} telah penuh (350). Capacity for session ${year} is full.`);
+  }
   
-  if (noSiriError) throw noSiriError;
+  // Generate No Siri in format MPHS/YYYY/NNN
+  const noSiri = `MPHS/${year}/${nextSequence.toString().padStart(3, '0')}`;
   
   // Calculate dates
   const approvalDate = new Date();
-  const currentYear = approvalDate.getFullYear();
-  const expiryDate = new Date(currentYear + 2, 11, 31); // December 31st of second year
   
-  // Update application
+  // Update application (removed expiry_date as it may not exist in schema)
   const { data, error } = await supabase
     .from('applications')
     .update({
       status: 'Diluluskan',
-      no_siri: noSiriData,
-      approved_date: approvalDate.toISOString(),
-      expiry_date: expiryDate.toISOString()
+      no_siri: noSiri,
+      approved_date: approvalDate.toISOString()
     })
     .eq('id', id)
     .select()

@@ -23,7 +23,7 @@ export default function Header() {
           <Link href="/" className="flex items-center space-x-3">
             <div className="relative h-10 w-10 sm:h-12 sm:w-12">
               <Image
-                src="/mphs.png"
+                src="/ptgs.png"
                 alt="PTGS Logo"
                 width={48}
                 height={48}

@@ -100,7 +100,7 @@ export default function Home() {
                 <div className="flex justify-center mb-6">
                   <div className="relative w-28 h-28 sm:w-36 sm:h-36">
                     <Image
-                      src="/mphs.png"
+                      src="/ptgs.png"
                       alt="Logo PTGS"
                       fill
                       className="object-contain"
