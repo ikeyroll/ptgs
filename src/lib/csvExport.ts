@@ -9,49 +9,28 @@ export function exportToCSV(applications: Application[], filename?: string): voi
   // Create CSV header (all butiran pemohon + status/tarikh/sesi)
   const headers = [
     'No. Rujukan',
-    'No. Siri',
-    'Jenis',
-    'No. IC',
     'Nama',
     'E-mel',
-    'No. Tel',
-    'Jabatan',
-    'Jawatan',
-    'Jenis Peralatan',
-    'Model',
-    'Kuantiti',
-    'Tujuan',
-    'Alamat',
+    'Aset',
     'Status',
     'Tarikh Mohon',
-    'Tarikh Lulus',
-    'Tarikh Tamat Tempoh',
-    'Sesi',
+    'Tarikh Penggunaan',
   ];
 
   // Convert applications to CSV rows
   const rows = applications.map(app => {
-    const session = getSession(app.approved_date || null);
+    const pemohon = typeof app.pemohon === 'string' ? JSON.parse(app.pemohon) : app.pemohon;
+    const assets = Array.isArray(pemohon?.assets) ? pemohon.assets.join(', ') : '-';
+    const tarikhPenggunaan = pemohon?.tarikhPenggunaan ? formatDate(pemohon.tarikhPenggunaan) : '-';
+    
     return [
       app.ref_no,
-      app.no_siri || '-',
-      app.application_type === 'baru' ? 'Baharu' : 'Pembaharuan',
-      app.pemohon.ic,
-      app.pemohon.name,
-      app.pemohon.email || '-',
-      app.pemohon.phone,
-      app.pemohon.department || '-',
-      app.pemohon.position || '-',
-      (app.equipment as any)?.type || '-',
-      (app.equipment as any)?.model || '-',
-      (app.equipment as any)?.quantity || '-',
-      (app.equipment as any)?.purpose || '-',
-      app.pemohon.address,
+      pemohon?.name || '-',
+      pemohon?.email || '-',
+      assets,
       normalizeStatus(app.status),
       formatDate(app.submitted_date),
-      app.approved_date ? formatDate(app.approved_date) : '-',
-      app.expiry_date ? formatDate(app.expiry_date) : '-',
-      session || '-',
+      tarikhPenggunaan,
     ];
   });
 

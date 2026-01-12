@@ -20,7 +20,7 @@ export default function PendaftaranPage() {
   const [email, setEmail] = useState('');
   const [nama, setNama] = useState('');
   const [bahagian, setBahagian] = useState('');
-  const [tarikhPermohonan, setTarikhPermohonan] = useState<string>('');
+  const [tarikhPenggunaan, setTarikhPenggunaan] = useState<string>('');
   const [aset, setAset] = useState<string[]>([]);
   const [justifikasi, setJustifikasi] = useState('');
   const [userType, setUserType] = useState<'PTGS' | 'eTanah' | ''>('');
@@ -35,12 +35,12 @@ export default function PendaftaranPage() {
   useEffect(() => {
     const stored = sessionStorage.getItem('applicantEmail');
     if (stored) setEmail(stored);
-    // Default tarikh permohonan to today
+    // Default tarikh penggunaan to today
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
-    setTarikhPermohonan(`${yyyy}-${mm}-${dd}`);
+    setTarikhPenggunaan(`${yyyy}-${mm}-${dd}`);
   }, []);
 
   const asetOptions = [
@@ -58,7 +58,7 @@ export default function PendaftaranPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !nama || !bahagian || !tarikhPermohonan || aset.length === 0 || !justifikasi || !userType || (userType === 'eTanah' && !peranan)) {
+    if (!email || !nama || !bahagian || !tarikhPenggunaan || aset.length === 0 || !justifikasi || !userType || (userType === 'eTanah' && !peranan)) {
       alert('Sila lengkapkan semua ruangan yang diperlukan.');
       return;
     }
@@ -106,7 +106,7 @@ export default function PendaftaranPage() {
         email,
         name: nama,
         bahagian,
-        tarikhPermohonan,
+        tarikhPenggunaan,
         userType,
         peranan: userType === 'eTanah' ? peranan : undefined,
         justification: justifikasi,
@@ -166,10 +166,10 @@ export default function PendaftaranPage() {
                   <Input id="bahagian" value={bahagian} onChange={(e) => setBahagian(e.target.value)} required />
                 </div>
 
-                {/* Tarikh Permohonan */}
+                {/* Tarikh Penggunaan */}
                 <div className="space-y-2">
-                  <Label htmlFor="tarikh">Tarikh Permohonan <span className="text-red-600">*</span></Label>
-                  <Input id="tarikh" type="date" value={tarikhPermohonan} onChange={(e) => setTarikhPermohonan(e.target.value)} required />
+                  <Label htmlFor="tarikh">Tarikh Penggunaan <span className="text-red-600">*</span></Label>
+                  <Input id="tarikh" type="date" value={tarikhPenggunaan} onChange={(e) => setTarikhPenggunaan(e.target.value)} required />
                 </div>
 
                 {/* Aset (Multi-select via checkboxes) */}

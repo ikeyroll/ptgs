@@ -335,12 +335,12 @@ export default function AdminPanel() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>{t('admin.refNo')}</TableHead>
-                        <TableHead>{t('admin.type')}</TableHead>
                         <TableHead>Nama</TableHead>
                         <TableHead>E-mel</TableHead>
                         <TableHead>Aset</TableHead>
                         <TableHead>{t('admin.status')}</TableHead>
                         <TableHead>{t('admin.dateApplied')}</TableHead>
+                        <TableHead>Tarikh Penggunaan</TableHead>
                         <TableHead className="text-right">{t('admin.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -355,12 +355,12 @@ export default function AdminPanel() {
                       filteredApps.map((app) => (
                         <TableRow key={app.id}>
                           <TableCell className="font-medium">{app.ref_no}</TableCell>
-                          <TableCell>{getTypeBadge(app.application_type)}</TableCell>
                           <TableCell>{(typeof app.pemohon==='string'? JSON.parse(app.pemohon): app.pemohon)?.name}</TableCell>
                           <TableCell>{(typeof app.pemohon==='string'? JSON.parse(app.pemohon): app.pemohon)?.email}</TableCell>
                           <TableCell className="text-sm">{(() => { const p = (typeof app.pemohon==='string'? JSON.parse(app.pemohon): app.pemohon); return Array.isArray(p?.assets)? p.assets.join(', '): '-'; })()}</TableCell>
                           <TableCell>{getStatusBadge(app.status)}</TableCell>
                           <TableCell>{new Date(app.submitted_date).toLocaleDateString('ms-MY')}</TableCell>
+                          <TableCell>{(() => { const p = (typeof app.pemohon==='string'? JSON.parse(app.pemohon): app.pemohon); return p?.tarikhPenggunaan ? new Date(p.tarikhPenggunaan).toLocaleDateString('ms-MY') : '-'; })()}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
                               <Button
@@ -412,11 +412,12 @@ export default function AdminPanel() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">Maklumat Permohonan</h4>
-                {(() => { const p = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon; const submittedStr = selectedApp.submitted_date ? new Date(selectedApp.submitted_date).toLocaleDateString('ms-MY') : '-'; const assets = Array.isArray(p?.assets)? p.assets.join(', '): '-'; return (
+                {(() => { const p = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon; const submittedStr = selectedApp.submitted_date ? new Date(selectedApp.submitted_date).toLocaleDateString('ms-MY') : '-'; const tarikhPenggunaanStr = p?.tarikhPenggunaan ? new Date(p.tarikhPenggunaan).toLocaleDateString('ms-MY') : '-'; const assets = Array.isArray(p?.assets)? p.assets.join(', '): '-'; return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div><span className="text-muted-foreground">Nama:</span> {p?.name || '-'}</div>
                     <div><span className="text-muted-foreground">E-mel:</span> {p?.email || '-'}</div>
                     <div><span className="text-muted-foreground">Bahagian:</span> {p?.bahagian || '-'}</div>
+                    <div><span className="text-muted-foreground">Tarikh Penggunaan:</span> {tarikhPenggunaanStr}</div>
                     <div><span className="text-muted-foreground">Tarikh Permohonan:</span> {submittedStr}</div>
                     <div><span className="text-muted-foreground">Jenis Pengguna:</span> {p?.userType || '-'}</div>
                     {p?.userType === 'eTanah' && (
