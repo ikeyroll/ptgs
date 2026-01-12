@@ -67,9 +67,9 @@ export default function SemakIC() {
         noSiri: app.no_siri,
         name: pemohon.name,
         ic: pemohon.ic,
-        okuCard: pemohon.okuCard,
-        taxAccount: pemohon.taxAccount,
-        carReg: pemohon.carReg,
+        email: pemohon.email,
+        department: pemohon.department,
+        position: pemohon.position,
         status: app.status,
         applicationType: app.application_type,
         submittedDate: new Date(app.submitted_date).toLocaleDateString('ms-MY'),
@@ -240,9 +240,9 @@ export default function SemakIC() {
             
             {/* Sistem Title */}
             <div className="border-t border-b border-primary/20 py-4 mb-2">
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Sistem e-Stiker Khas</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Sistem Permohonan Peralatan ICT</h1>
               <p className="text-muted-foreground text-base sm:text-lg">
-                Daftar pelekat kenderaan OKU secara dalam talian dengan mudah dan cepat
+                Mohon peralatan ICT secara dalam talian dengan mudah dan cepat
               </p>
             </div>
           </div>
@@ -337,16 +337,16 @@ export default function SemakIC() {
                         <p className="font-mono font-semibold">{result.ic}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Kad OKU</p>
-                        <p className="font-semibold">{result.okuCard}</p>
+                        <p className="text-muted-foreground">E-mel</p>
+                        <p className="font-semibold">{result.email}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">No. Akaun Cukai Taksiran</p>
-                        <p className="font-semibold">{result.taxAccount || '-'}</p>
+                        <p className="text-muted-foreground">Jabatan</p>
+                        <p className="font-semibold">{result.department || '-'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">No. Kereta</p>
-                        <p className="font-mono font-semibold">{result.carReg}</p>
+                        <p className="text-muted-foreground">Jawatan</p>
+                        <p className="font-semibold">{result.position || '-'}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-muted-foreground">Tarikh Mohon</p>
@@ -360,7 +360,7 @@ export default function SemakIC() {
                     <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
                       <p className="text-purple-800 text-center">
                         <CheckCircle className="inline h-5 w-5 mr-2" />
-                        Pelekat telah diambil. Terima kasih!
+                        Peralatan telah diambil. Terima kasih!
                       </p>
                     </div>
                   )}
@@ -368,7 +368,7 @@ export default function SemakIC() {
                   {result.status === 'Sedia Diambil' && (
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-blue-800 text-center">
-                        Pelekat anda sudah sedia untuk diambil di Pejabat MPHS
+                        Peralatan anda sudah sedia untuk diambil di Pejabat PTGS
                       </p>
                     </div>
                   )}
@@ -397,7 +397,7 @@ export default function SemakIC() {
                               <h3 className={`text-lg font-bold ${
                                 isExpired ? 'text-red-900' : nearExpiry ? 'text-amber-900' : 'text-green-900'
                               }`}>
-                                {isExpired ? '⚠️ STIKER TAMAT TEMPOH' : nearExpiry ? '⚠️ STIKER HAMPIR TAMAT' : '✅ STIKER MASIH SAH'}
+                                {isExpired ? '⚠️ TEMPOH TAMAT' : nearExpiry ? '⚠️ HAMPIR TAMAT TEMPOH' : '✅ MASIH SAH'}
                               </h3>
                             </div>
                           </div>
@@ -453,10 +453,10 @@ export default function SemakIC() {
                           }`}>
                             <p className="text-sm font-medium">
                               {isExpired 
-                                ? '⚠️ Stiker anda telah tamat tempoh.'
+                                ? '⚠️ Tempoh permohonan telah tamat.'
                                 : nearExpiry
-                                ? '⚠️ Stiker anda akan tamat tempoh tidak lama lagi. Anda boleh buat pembaharuan sekarang.'
-                                : 'Stiker anda masih sah.'}
+                                ? '⚠️ Tempoh akan tamat tidak lama lagi. Anda boleh buat pembaharuan sekarang.'
+                                : 'Permohonan masih sah.'}
                             </p>
                           </div>
                         </div>

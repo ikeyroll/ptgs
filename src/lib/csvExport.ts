@@ -13,11 +13,14 @@ export function exportToCSV(applications: Application[], filename?: string): voi
     'Jenis',
     'No. IC',
     'Nama',
-    'No. Kad OKU',
+    'E-mel',
     'No. Tel',
-    'No. Kereta',
-    'Kategori OKU',
-    'No. Akaun Cukai Taksiran',
+    'Jabatan',
+    'Jawatan',
+    'Jenis Peralatan',
+    'Model',
+    'Kuantiti',
+    'Tujuan',
     'Alamat',
     'Status',
     'Tarikh Mohon',
@@ -35,11 +38,14 @@ export function exportToCSV(applications: Application[], filename?: string): voi
       app.application_type === 'baru' ? 'Baharu' : 'Pembaharuan',
       app.pemohon.ic,
       app.pemohon.name,
-      app.pemohon.okuCard,
+      app.pemohon.email || '-',
       app.pemohon.phone,
-      app.pemohon.carReg,
-      app.pemohon.okuCategory,
-      (app.pemohon as any).taxAccount || '-',
+      app.pemohon.department || '-',
+      app.pemohon.position || '-',
+      (app.equipment as any)?.type || '-',
+      (app.equipment as any)?.model || '-',
+      (app.equipment as any)?.quantity || '-',
+      (app.equipment as any)?.purpose || '-',
       app.pemohon.address,
       normalizeStatus(app.status),
       formatDate(app.submitted_date),
@@ -83,7 +89,7 @@ function formatDate(date: Date | string): string {
 function generateFilename(): string {
   const now = new Date();
   const dateStr = now.toISOString().split('T')[0];
-  return `permohonan_oku_${dateStr}.csv`;
+  return `permohonan_peralatan_ict_${dateStr}.csv`;
 }
 
 function getSession(approvedDate: string | null): string {
@@ -97,8 +103,8 @@ function getSession(approvedDate: string | null): string {
 }
 
 function normalizeStatus(status: string): string {
-  // Map legacy 'Tidak Berjaya' to 'Tidak Lengkap' for consistency
-  return status === 'Tidak Berjaya' ? 'Tidak Lengkap' : status;
+  // Return status as-is
+  return status;
 }
 
 export function exportWithDateRange(
@@ -119,7 +125,7 @@ export function exportWithDateRange(
   // Generate filename with date range
   const fromStr = formatDate(dateFrom).replace(/\//g, '-');
   const toStr = formatDate(dateTo).replace(/\//g, '-');
-  const filename = `permohonan_oku_${fromStr}_${toStr}.csv`;
+  const filename = `permohonan_peralatan_ict_${fromStr}_${toStr}.csv`;
 
   exportToCSV(filtered, filename);
 }

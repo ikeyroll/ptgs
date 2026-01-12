@@ -84,7 +84,7 @@ function PermohonanBerjayaContent() {
                   </li>
                   <li className="flex items-start">
                     <span className="mr-2">•</span>
-                    <span>Pelekat boleh diambil di Pejabat PTGS selepas diluluskan</span>
+                    <span>Peralatan boleh diambil di Pejabat PTGS selepas diluluskan</span>
                   </li>
                 </ul>
               </div>
@@ -114,7 +114,7 @@ function PermohonanBerjayaContent() {
           <div className="hidden print:block mt-8">
             <div className="border-2 border-gray-300 p-8">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold">Resit Permohonan Pelekat OKU</h2>
+                <h2 className="text-2xl font-bold">Resit Permohonan Peralatan ICT</h2>
                 <p className="text-sm text-gray-600">Pejabat Tanah dan Galian Selangor</p>
               </div>
               

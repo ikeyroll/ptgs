@@ -27,20 +27,18 @@ export default function PendaftaranBaharu() {
     // Maklumat Pemohon
     pemohonName: '',
     pemohonIC: '',
-    pemohonOKUCard: '',
-    pemohonTaxAccount: '',
-    pemohonAddress: '',
-    pemohonCarReg: '',
+    pemohonEmail: '',
     pemohonPhone: '',
-    pemohonOKUCategory: '',
+    pemohonDepartment: '',
+    pemohonPosition: '',
+    pemohonAddress: '',
     
-    // Maklumat Tanggungan (optional)
-    isTanggungan: false,
-    tanggunganName: '',
-    tanggunganRelation: '',
-    tanggunganCompany: '',
-    tanggunganIC: '',
-    tanggunganDate: '',
+    // Maklumat Peralatan
+    equipmentType: '',
+    equipmentModel: '',
+    equipmentQuantity: '1',
+    equipmentPurpose: '',
+    equipmentJustification: '',
   });
   
   // Geo fields (auto-sync with map)
@@ -55,10 +53,9 @@ export default function PendaftaranBaharu() {
   
   const [documents, setDocuments] = useState({
     icCopy: null as File | null,
-    okuCard: null as File | null,
-    drivingLicense: null as File | null,
-    passportPhoto: null as File | null,
-    tanggunganSignature: null as File | null,
+    justificationLetter: null as File | null,
+    departmentApproval: null as File | null,
+    otherDocuments: null as File | null,
   });
 
   useEffect(() => {
@@ -119,9 +116,6 @@ export default function PendaftaranBaharu() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, isTanggungan: checked }));
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: keyof typeof documents) => {
     if (e.target.files && e.target.files[0]) {
@@ -137,28 +131,22 @@ export default function PendaftaranBaharu() {
     }
     
     // Validation - Maklumat Pemohon (WAJIB)
-    if (!formData.pemohonName || !formData.pemohonIC || !formData.pemohonOKUCard || !formData.pemohonTaxAccount ||
-        !formData.pemohonAddress || !formData.pemohonCarReg || !formData.pemohonPhone || 
-        !formData.pemohonOKUCategory) {
+    if (!formData.pemohonName || !formData.pemohonIC || !formData.pemohonEmail ||
+        !formData.pemohonPhone || !formData.pemohonDepartment || !formData.pemohonPosition ||
+        !formData.pemohonAddress) {
       toast.error('Sila lengkapkan semua maklumat pemohon yang diwajibkan');
       return;
     }
 
-    // Validation - Maklumat Tanggungan (if checked)
-    if (formData.isTanggungan) {
-      if (!formData.tanggunganName || !formData.tanggunganRelation || 
-          !formData.tanggunganIC || !formData.tanggunganDate) {
-        toast.error('Sila lengkapkan maklumat tanggungan');
-        return;
-      }
-      if (!documents.tanggunganSignature) {
-        toast.error('Sila muat naik tandatangan penjaga');
-        return;
-      }
+    // Validation - Maklumat Peralatan (WAJIB)
+    if (!formData.equipmentType || !formData.equipmentQuantity || 
+        !formData.equipmentPurpose || !formData.equipmentJustification) {
+      toast.error('Sila lengkapkan semua maklumat peralatan yang diwajibkan');
+      return;
     }
 
     // Validation - Documents (WAJIB)
-    if (!documents.icCopy || !documents.okuCard || !documents.drivingLicense || !documents.passportPhoto) {
+    if (!documents.icCopy || !documents.justificationLetter || !documents.departmentApproval) {
       toast.error('Sila muat naik semua dokumen yang diwajibkan');
       return;
     }
@@ -174,11 +162,10 @@ export default function PendaftaranBaharu() {
       toast.info('Uploading documents...');
       const uploadedDocs = {
         icCopy: await uploadFile(documents.icCopy!, `${refNo}/ic-copy.pdf`),
-        okuCard: await uploadFile(documents.okuCard!, `${refNo}/oku-card.jpg`),
-        drivingLicense: await uploadFile(documents.drivingLicense!, `${refNo}/license.pdf`),
-        passportPhoto: await uploadFile(documents.passportPhoto!, `${refNo}/photo.jpg`),
-        tanggunganSignature: documents.tanggunganSignature 
-          ? await uploadFile(documents.tanggunganSignature, `${refNo}/signature.jpg`)
+        justificationLetter: await uploadFile(documents.justificationLetter!, `${refNo}/justification.pdf`),
+        departmentApproval: await uploadFile(documents.departmentApproval!, `${refNo}/approval.pdf`),
+        otherDocuments: documents.otherDocuments 
+          ? await uploadFile(documents.otherDocuments, `${refNo}/other.pdf`)
           : undefined
       };
       
@@ -189,19 +176,19 @@ export default function PendaftaranBaharu() {
         pemohon: {
           name: formData.pemohonName,
           ic: formData.pemohonIC,
-          okuCard: formData.pemohonOKUCard,
-          taxAccount: formData.pemohonTaxAccount,
+          email: formData.pemohonEmail,
           phone: formData.pemohonPhone,
-          carReg: formData.pemohonCarReg,
-          okuCategory: formData.pemohonOKUCategory,
+          department: formData.pemohonDepartment,
+          position: formData.pemohonPosition,
           address: formData.pemohonAddress,
         },
-        tanggungan: formData.isTanggungan ? {
-          name: formData.tanggunganName,
-          relation: formData.tanggunganRelation,
-          ic: formData.tanggunganIC,
-          company: formData.tanggunganCompany,
-        } : undefined,
+        equipment: {
+          type: formData.equipmentType,
+          model: formData.equipmentModel || undefined,
+          quantity: parseInt(formData.equipmentQuantity),
+          purpose: formData.equipmentPurpose,
+          justification: formData.equipmentJustification,
+        },
         documents: uploadedDocs,
         status: 'Dalam Proses' as const,
         submitted_date: new Date().toISOString(),
@@ -235,7 +222,7 @@ export default function PendaftaranBaharu() {
       <main className="min-h-screen py-12 bg-gradient-to-br from-primary/5 to-background">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Borang Permohonan Pelekat Kenderaan OKU</h1>
+            <h1 className="text-3xl font-bold mb-2">Borang Permohonan Peralatan ICT</h1>
             <p className="text-muted-foreground">Pejabat Tanah dan Galian Selangor</p>
           </div>
 
@@ -293,7 +280,7 @@ export default function PendaftaranBaharu() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="pemohonName">Nama Pemohon OKU *</Label>
+                    <Label htmlFor="pemohonName">Nama Pemohon *</Label>
                     <Input
                       id="pemohonName"
                       name="pemohonName"
@@ -317,35 +304,14 @@ export default function PendaftaranBaharu() {
                     </p>
                   </div>
                   <div>
-                    <Label htmlFor="pemohonOKUCard">No. Kad OKU *</Label>
+                    <Label htmlFor="pemohonEmail">E-mel *</Label>
                     <Input
-                      id="pemohonOKUCard"
-                      name="pemohonOKUCard"
-                      value={formData.pemohonOKUCard}
+                      id="pemohonEmail"
+                      name="pemohonEmail"
+                      type="email"
+                      value={formData.pemohonEmail}
                       onChange={handleInputChange}
-                      placeholder="OKU123456"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="pemohonTaxAccount">No Akaun Cukai Taksiran *</Label>
-                    <Input
-                      id="pemohonTaxAccount"
-                      name="pemohonTaxAccount"
-                      value={formData.pemohonTaxAccount}
-                      onChange={handleInputChange}
-                      placeholder="Contoh: T00947903"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="pemohonCarReg">No. Pendaftaran Kereta *</Label>
-                    <Input
-                      id="pemohonCarReg"
-                      name="pemohonCarReg"
-                      value={formData.pemohonCarReg}
-                      onChange={handleInputChange}
-                      placeholder="WXY1234"
+                      placeholder="user@ptgs.gov.my"
                       required
                     />
                   </div>
@@ -362,13 +328,24 @@ export default function PendaftaranBaharu() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="pemohonOKUCategory">Kategori OKU (Sila Nyatakan) *</Label>
+                    <Label htmlFor="pemohonDepartment">Jabatan *</Label>
                     <Input
-                      id="pemohonOKUCategory"
-                      name="pemohonOKUCategory"
-                      value={formData.pemohonOKUCategory}
+                      id="pemohonDepartment"
+                      name="pemohonDepartment"
+                      value={formData.pemohonDepartment}
                       onChange={handleInputChange}
-                      placeholder="Contoh: Penglihatan, Pendengaran, Fizikal"
+                      placeholder="Contoh: Bahagian Teknologi Maklumat"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="pemohonPosition">Jawatan *</Label>
+                    <Input
+                      id="pemohonPosition"
+                      name="pemohonPosition"
+                      value={formData.pemohonPosition}
+                      onChange={handleInputChange}
+                      placeholder="Contoh: Pegawai IT"
                       required
                     />
                   </div>
@@ -408,106 +385,77 @@ export default function PendaftaranBaharu() {
                   </div>
                 </div>
               </CardContent>
+            </Card>
+
+            {/* b) Maklumat Peralatan - WAJIB */}
+            <Card className="border-l-4 border-l-blue-500">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle>b) Maklumat Tanggungan</CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-2">
-                      <Info className="w-4 h-4 text-blue-500" />
-                      <span className="text-blue-600 font-medium">PILIHAN (Jika Tanggungan Pemohon Adalah OKU)</span>
-                    </CardDescription>
-                  </div>
-                </div>
+                <CardTitle>b) Maklumat Peralatan</CardTitle>
+                <CardDescription className="flex items-center gap-2 mt-2">
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <span className="text-red-600 font-medium">WAJIB DIISI</span>
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="isTanggungan"
-                    checked={formData.isTanggungan}
-                    onCheckedChange={handleCheckboxChange}
-                  />
-                  <label
-                    htmlFor="isTanggungan"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Tanggungan adalah OKU
-                  </label>
-                </div>
-
-                {formData.isTanggungan && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                      <Label htmlFor="tanggunganName">Nama Penjaga *</Label>
-                      <Input
-                        id="tanggunganName"
-                        name="tanggunganName"
-                        value={formData.tanggunganName}
-                        onChange={handleInputChange}
-                        placeholder="Nama penjaga/wali"
-                        required={formData.isTanggungan}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="tanggunganRelation">Hubungan *</Label>
-                      <Input
-                        id="tanggunganRelation"
-                        name="tanggunganRelation"
-                        value={formData.tanggunganRelation}
-                        onChange={handleInputChange}
-                        placeholder="Contoh: Ibu, Bapa, Adik"
-                        required={formData.isTanggungan}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="tanggunganCompany">Nama Persatuan</Label>
-                      <Input
-                        id="tanggunganCompany"
-                        name="tanggunganCompany"
-                        value={formData.tanggunganCompany}
-                        onChange={handleInputChange}
-                        placeholder="Nama persatuan (jika ada)"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="tanggunganIC">No. Kad Pengenalan Penjaga *</Label>
-                      <Input
-                        id="tanggunganIC"
-                        name="tanggunganIC"
-                        value={formData.tanggunganIC}
-                        onChange={handleInputChange}
-                        placeholder="850215-10-5432"
-                        required={formData.isTanggungan}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="tanggunganSignature">Tandatangan Penjaga *</Label>
-                      <Input
-                        id="tanggunganSignature"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileChange(e, 'tanggunganSignature')}
-                        required={formData.isTanggungan}
-                      />
-                      {documents.tanggunganSignature && (
-                        <p className="text-sm text-green-600 mt-1 flex items-center">
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          {documents.tanggunganSignature.name}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="tanggunganDate">Tarikh *</Label>
-                      <Input
-                        id="tanggunganDate"
-                        name="tanggunganDate"
-                        type="date"
-                        value={formData.tanggunganDate}
-                        onChange={handleInputChange}
-                        required={formData.isTanggungan}
-                      />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="equipmentType">Jenis Peralatan *</Label>
+                    <Input
+                      id="equipmentType"
+                      name="equipmentType"
+                      value={formData.equipmentType}
+                      onChange={handleInputChange}
+                      placeholder="Contoh: Komputer Riba, Pencetak, Projektor"
+                      required
+                    />
                   </div>
-                )}
+                  <div>
+                    <Label htmlFor="equipmentModel">Model (Pilihan)</Label>
+                    <Input
+                      id="equipmentModel"
+                      name="equipmentModel"
+                      value={formData.equipmentModel}
+                      onChange={handleInputChange}
+                      placeholder="Contoh: Dell Latitude 5420"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="equipmentQuantity">Kuantiti *</Label>
+                    <Input
+                      id="equipmentQuantity"
+                      name="equipmentQuantity"
+                      type="number"
+                      min="1"
+                      value={formData.equipmentQuantity}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="equipmentPurpose">Tujuan Permohonan *</Label>
+                    <Textarea
+                      id="equipmentPurpose"
+                      name="equipmentPurpose"
+                      value={formData.equipmentPurpose}
+                      onChange={handleInputChange}
+                      placeholder="Nyatakan tujuan penggunaan peralatan"
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="equipmentJustification">Justifikasi Permohonan *</Label>
+                    <Textarea
+                      id="equipmentJustification"
+                      name="equipmentJustification"
+                      value={formData.equipmentJustification}
+                      onChange={handleInputChange}
+                      placeholder="Nyatakan justifikasi keperluan peralatan ini"
+                      rows={3}
+                      required
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -522,7 +470,7 @@ export default function PendaftaranBaharu() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="icCopy">☐ Satu (1) Salinan Kad Pengenalan atau Sijil Kelahiran Pemohon / Tanggungan *</Label>
+                  <Label htmlFor="icCopy">Salinan Kad Pengenalan *</Label>
                   <Input
                     id="icCopy"
                     type="file"
@@ -540,55 +488,54 @@ export default function PendaftaranBaharu() {
                 </div>
 
                 <div>
-                  <Label htmlFor="okuCard">☐ Satu (1) Salinan Kad OKU Pemohon / Tanggungan *</Label>
+                  <Label htmlFor="justificationLetter">Surat Justifikasi Permohonan *</Label>
                   <Input
-                    id="okuCard"
+                    id="justificationLetter"
                     type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => handleFileChange(e, 'okuCard')}
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => handleFileChange(e, 'justificationLetter')}
                     required
                     className="mt-2"
                   />
-                  {documents.okuCard && (
+                  {documents.justificationLetter && (
                     <p className="text-sm text-green-600 mt-1 flex items-center">
                       <CheckCircle className="w-4 h-4 mr-1" />
-                      {documents.okuCard.name}
+                      {documents.justificationLetter.name}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="drivingLicense">☐ Satu (1) Salinan Lesen Memandu Pemohon *</Label>
+                  <Label htmlFor="departmentApproval">Kelulusan Ketua Jabatan *</Label>
                   <Input
-                    id="drivingLicense"
+                    id="departmentApproval"
                     type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => handleFileChange(e, 'drivingLicense')}
+                    accept=".pdf,.doc,.docx,image/*"
+                    onChange={(e) => handleFileChange(e, 'departmentApproval')}
                     required
                     className="mt-2"
                   />
-                  {documents.drivingLicense && (
+                  {documents.departmentApproval && (
                     <p className="text-sm text-green-600 mt-1 flex items-center">
                       <CheckCircle className="w-4 h-4 mr-1" />
-                      {documents.drivingLicense.name}
+                      {documents.departmentApproval.name}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="passportPhoto">☐ Sekeping Gambar Ukuran Pasport OKU *</Label>
+                  <Label htmlFor="otherDocuments">Dokumen Lain (Pilihan)</Label>
                   <Input
-                    id="passportPhoto"
+                    id="otherDocuments"
                     type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'passportPhoto')}
-                    required
+                    accept=".pdf,.doc,.docx,image/*"
+                    onChange={(e) => handleFileChange(e, 'otherDocuments')}
                     className="mt-2"
                   />
-                  {documents.passportPhoto && (
+                  {documents.otherDocuments && (
                     <p className="text-sm text-green-600 mt-1 flex items-center">
                       <CheckCircle className="w-4 h-4 mr-1" />
-                      {documents.passportPhoto.name}
+                      {documents.otherDocuments.name}
                     </p>
                   )}
                 </div>

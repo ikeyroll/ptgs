@@ -14,27 +14,26 @@ export interface Application {
   pemohon: {
     name: string;
     ic: string;
-    okuCard: string;
+    email: string;
     phone: string;
-    carReg: string;
-    okuCategory: string;
+    department: string;
+    position: string;
     address: string;
-    taxAccount?: string;
   };
-  tanggungan?: {
-    name: string;
-    relation: string;
-    ic: string;
-    company?: string;
+  equipment: {
+    type: string;
+    model?: string;
+    quantity: number;
+    purpose: string;
+    justification: string;
   };
   documents: {
     icCopy: string;
-    okuCard: string;
-    drivingLicense: string;
-    passportPhoto: string;
-    tanggunganSignature?: string;
+    justificationLetter: string;
+    departmentApproval: string;
+    otherDocuments?: string;
   };
-  status: 'Dalam Proses' | 'Diluluskan' | 'Sedia Diambil' | 'Telah Diambil' | 'Tidak Berjaya';
+  status: 'Dalam Proses' | 'Diluluskan' | 'Tidak Berjaya';
   admin_notes?: string;
   submitted_date: string;
   approved_date?: string;

@@ -527,7 +527,7 @@ export default function AdminPanel() {
               {/* Maklumat Pemohon */}
               <Card>
                 <CardHeader className="bg-blue-50">
-                  <CardTitle className="text-lg">a) Maklumat Pemohon OKU</CardTitle>
+                  <CardTitle className="text-lg">a) Maklumat Pemohon</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -540,20 +540,20 @@ export default function AdminPanel() {
                       <p className="font-mono font-semibold">{selectedApp.pemohon.ic}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">No. Kad OKU</p>
-                      <p className="font-semibold">{selectedApp.pemohon.okuCard}</p>
+                      <p className="text-xs text-muted-foreground mb-1">E-mel</p>
+                      <p className="font-semibold">{selectedApp.pemohon.email}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">No. Telefon</p>
                       <p className="font-semibold">{selectedApp.pemohon.phone}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">No. Pendaftaran Kereta</p>
-                      <p className="font-semibold">{selectedApp.pemohon.carReg}</p>
+                      <p className="text-xs text-muted-foreground mb-1">Jabatan</p>
+                      <p className="font-semibold">{selectedApp.pemohon.department}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Kategori OKU</p>
-                      <p className="font-semibold">{selectedApp.pemohon.okuCategory}</p>
+                      <p className="text-xs text-muted-foreground mb-1">Jawatan</p>
+                      <p className="font-semibold">{selectedApp.pemohon.position}</p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-xs text-muted-foreground mb-1">Alamat</p>

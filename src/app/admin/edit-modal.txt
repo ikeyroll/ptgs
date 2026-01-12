@@ -1,0 +1,72 @@
+      {/* Edit Modal */}
+      <Dialog open={isEditMode} onOpenChange={setIsEditMode}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Kemaskini Maklumat Permohonan</DialogTitle>
+            <DialogDescription>No. Rujukan: {selectedApp?.ref_no}</DialogDescription>
+          </DialogHeader>
+          {editFormData && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Nama</Label>
+                <Input
+                  id="edit-name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-email">E-mel</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-bahagian">Bahagian</Label>
+                <Input
+                  id="edit-bahagian"
+                  value={editFormData.bahagian}
+                  onChange={(e) => setEditFormData({ ...editFormData, bahagian: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-justification">Justifikasi</Label>
+                <Textarea
+                  id="edit-justification"
+                  value={editFormData.justification}
+                  onChange={(e) => setEditFormData({ ...editFormData, justification: e.target.value })}
+                  rows={4}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditMode(false)}>Batal</Button>
+            <Button onClick={async () => {
+              if (!selectedApp || !editFormData) return;
+              try {
+                const currentPemohon = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon;
+                const updatedPemohon = {
+                  ...currentPemohon,
+                  name: editFormData.name,
+                  email: editFormData.email,
+                  bahagian: editFormData.bahagian,
+                  justification: editFormData.justification,
+                  assets: editFormData.assets
+                };
+                await updateApplication(selectedApp.id, { pemohon: updatedPemohon });
+                toast.success('Maklumat telah dikemaskini');
+                setIsEditMode(false);
+                loadApplications();
+              } catch (e) {
+                toast.error('Gagal mengemas kini maklumat');
+              }
+            }}>
+              Simpan Perubahan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>

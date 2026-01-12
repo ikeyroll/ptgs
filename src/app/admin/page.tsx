@@ -73,30 +73,28 @@ export default function AdminPanel() {
   const [adminNoteDraft, setAdminNoteDraft] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>(null);
 
-  // Helper function to get session in format YYYY/YYYY+2
-  const getSession = (approvedDate: string | null): string => {
-    if (!approvedDate) return '-';
+  // Helper function to get application year
+  const getApplicationYear = (submittedDate: string): string => {
     try {
-      const year = new Date(approvedDate).getFullYear();
-      return `${year}/${year + 2}`;
+      return new Date(submittedDate).getFullYear().toString();
     } catch (e) {
       return '-';
     }
   };
 
-  // Get unique sessions from applications
-  const getUniqueSessions = () => {
-    const sessions = new Set<string>();
+  // Get unique application years from applications
+  const getUniqueYears = () => {
+    const years = new Set<string>();
     applications.forEach(app => {
-      if (app.approved_date) {
-        const session = getSession(app.approved_date);
-        if (session) {
-          sessions.add(session);
-        }
+      const year = getApplicationYear(app.submitted_date);
+      if (year !== '-') {
+        years.add(year);
       }
     });
-    return Array.from(sessions).sort().reverse(); // Sort by most recent first
+    return Array.from(years).sort().reverse(); // Sort by most recent first
   };
 
   
@@ -117,19 +115,16 @@ export default function AdminPanel() {
   const filteredApps = visibleApps.filter((app) => {
     const p = typeof app.pemohon === 'string' ? JSON.parse(app.pemohon) : app.pemohon;
     const assetsList = Array.isArray(p?.assets) ? p.assets.join(', ') : '';
-    const hay = `${app.ref_no} ${app.status} ${p?.name || ''} ${p?.email || ''} ${assetsList} ${p?.justification || ''}`.toLowerCase();
+    const hay = `${app.ref_no} ${p?.name || ''} ${p?.email || ''}`.toLowerCase();
     const matchesSearch = hay.includes(searchQuery.toLowerCase());
     
-    // Handle both old and new status values
-    const normalizedStatus = app.status === 'Tidak Berjaya' ? 'Tidak Lengkap' : app.status;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'Tidak Lengkap' && (normalizedStatus === 'Tidak Lengkap' || app.status === 'Tidak Berjaya')) ||
-                         normalizedStatus === statusFilter;
+    // Match status directly (already normalized in database)
+    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     
-    const appSession = getSession(app.approved_date ?? null);
-    const matchesSession = sessionFilter === 'all' || appSession === sessionFilter;
+    const appYear = getApplicationYear(app.submitted_date);
+    const matchesYear = sessionFilter === 'all' || appYear === sessionFilter;
     
-    return matchesSearch && matchesStatus && matchesSession;
+    return matchesSearch && matchesStatus && matchesYear;
   });
 
   // Notes-only workflow: no approve/reject handlers
@@ -147,22 +142,15 @@ export default function AdminPanel() {
   // Notes-only workflow: no mark ready/collected handlers
 
   const getStatusBadge = (status: string) => {
-    // Handle both old and new status values
-    const normalizedStatus = status === 'Tidak Berjaya' ? 'Tidak Lengkap' : status;
-    
-    switch (normalizedStatus) {
-      case 'Pending':
+    switch (status) {
       case 'Dalam Proses':
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Dalam Proses</Badge>;
-      case 'Approved':
       case 'Diluluskan':
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Diluluskan</Badge>;
-      case 'Tidak Lengkap':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Tidak Lengkap</Badge>;
-      case 'Sedia Diambil':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Sedia Diambil</Badge>;
-      case 'Telah Diambil':
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Telah Diambil</Badge>;
+      case 'Tidak Berjaya':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Tidak Berjaya</Badge>;
+      case 'Ditolak':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Tidak Berjaya</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -302,25 +290,23 @@ export default function AdminPanel() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t('admin.all')}</SelectItem>
-                      <SelectItem value="Dalam Proses">{t('status.dalamProses')}</SelectItem>
-                      <SelectItem value="Diluluskan">{t('status.diluluskan')}</SelectItem>
-                      <SelectItem value="Sedia Diambil">{t('status.sediaDiambil')}</SelectItem>
-                      <SelectItem value="Telah Diambil">{t('status.telahDiambil')}</SelectItem>
-                      <SelectItem value="Tidak Lengkap">Tidak Lengkap</SelectItem>
+                      <SelectItem value="Dalam Proses">Dalam Proses</SelectItem>
+                      <SelectItem value="Diluluskan">Diluluskan</SelectItem>
+                      <SelectItem value="Tidak Berjaya">Tidak Berjaya</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label className="mb-2 block">{language === 'en' ? 'Session' : 'Sesi'}</Label>
+                  <Label className="mb-2 block">{language === 'en' ? 'Application Year' : 'Tahun Mohon'}</Label>
                   <Select value={sessionFilter} onValueChange={setSessionFilter}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{language === 'en' ? 'All' : 'Semua'}</SelectItem>
-                      {getUniqueSessions().map(session => (
-                        <SelectItem key={session} value={session}>
-                          {session}
+                      {getUniqueYears().map(year => (
+                        <SelectItem key={year} value={year}>
+                          {year}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -442,43 +428,53 @@ export default function AdminPanel() {
                 ); })()}
               </div>
 
-              {selectedApp.tanggungan && (
-                <div>
-                  <h4 className="font-semibold mb-2">Maklumat Tanggungan</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><span className="text-muted-foreground">Nama Penjaga:</span> {selectedApp.tanggungan.name}</div>
-                    <div><span className="text-muted-foreground">Hubungan:</span> {selectedApp.tanggungan.relation}</div>
-                    <div><span className="text-muted-foreground">IC Penjaga:</span> {selectedApp.tanggungan.ic}</div>
-                  </div>
-                </div>
-              )}
 
-              {/* Approve/Reject Buttons */}
-              {selectedApp.status === 'Dalam Proses' && (
-                <div className="flex gap-3">
-                  <Button
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => {
-                      setShowDetailModal(false);
-                      setShowApproveModal(true);
-                    }}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Luluskan
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => {
-                      setShowDetailModal(false);
-                      setShowRejectModal(true);
-                    }}
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Tolak
-                  </Button>
-                </div>
-              )}
+              {/* Approve/Reject/Edit Buttons */}
+              <div className="flex gap-3">
+                {selectedApp.status === 'Dalam Proses' && (
+                  <>
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        setShowDetailModal(false);
+                        setShowApproveModal(true);
+                      }}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Luluskan
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowDetailModal(false);
+                        setShowRejectModal(true);
+                      }}
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Tolak
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    if (!selectedApp) return;
+                    const pemohon = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon;
+                    setEditFormData({
+                      name: pemohon?.name || '',
+                      email: pemohon?.email || '',
+                      bahagian: pemohon?.bahagian || '',
+                      justification: pemohon?.justification || '',
+                      assets: pemohon?.assets || []
+                    });
+                    setIsEditMode(true);
+                  }}
+                >
+                  Kemaskini
+                </Button>
+              </div>
 
               <div className="p-4 bg-blue-50 border-l-4 border-l-blue-500 rounded">
                 <h4 className="font-semibold text-blue-800 mb-2">Catatan Admin</h4>
@@ -505,87 +501,58 @@ export default function AdminPanel() {
               {/* No expiry display for asset borrow workflow */}
 
               {/* Documents Section */}
-              {selectedApp.documents && (
-                <div>
-                  <h4 className="font-semibold mb-3">Dokumen Yang Dimuat Naik</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {selectedApp.documents.icCopy && (
-                      <a 
-                        href={selectedApp.documents.icCopy} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-3 border rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                      >
-                        <FileText className="w-5 h-5 text-blue-600" />
-                        <div className="text-sm">
-                          <p className="font-medium">Salinan IC</p>
-                          <p className="text-xs text-muted-foreground">Klik untuk lihat</p>
+              {selectedApp.documents && (() => {
+                try {
+                  const docs = typeof selectedApp.documents === 'string' ? JSON.parse(selectedApp.documents) : selectedApp.documents;
+                  console.log('Documents data:', docs);
+                  const hasDocuments = docs?.uploads && Array.isArray(docs.uploads) && docs.uploads.length > 0;
+                  
+                  return (
+                    <div>
+                      <h4 className="font-semibold mb-3">Dokumen Yang Dimuat Naik</h4>
+                      {hasDocuments ? (
+                        <div className="grid grid-cols-1 gap-3">
+                          {docs.uploads.map((doc: any, idx: number) => (
+                            doc.url ? (
+                              <a 
+                                key={idx}
+                                href={doc.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="p-3 border rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                              >
+                                <FileText className="w-5 h-5 text-blue-600" />
+                                <div className="text-sm">
+                                  <p className="font-medium">{doc.name}</p>
+                                  <p className="text-xs text-muted-foreground">Klik untuk lihat</p>
+                                </div>
+                              </a>
+                            ) : (
+                              <div key={idx} className="p-3 border rounded-lg bg-gray-50 flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-gray-400" />
+                                <div className="text-sm">
+                                  <p className="font-medium text-gray-600">{doc.name}</p>
+                                  <p className="text-xs text-red-500">{doc.error || 'Fail gagal dimuat naik'}</p>
+                                </div>
+                              </div>
+                            )
+                          ))}
                         </div>
-                      </a>
-                    )}
-                    
-                    {selectedApp.documents.okuCard && (
-                      <a 
-                        href={selectedApp.documents.okuCard} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-3 border rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                      >
-                        <FileText className="w-5 h-5 text-green-600" />
-                        <div className="text-sm">
-                          <p className="font-medium">Kad OKU</p>
-                          <p className="text-xs text-muted-foreground">Klik untuk lihat</p>
-                        </div>
-                      </a>
-                    )}
-                    
-                    {selectedApp.documents.drivingLicense && (
-                      <a 
-                        href={selectedApp.documents.drivingLicense} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-3 border rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                      >
-                        <FileText className="w-5 h-5 text-purple-600" />
-                        <div className="text-sm">
-                          <p className="font-medium">Lesen Memandu</p>
-                          <p className="text-xs text-muted-foreground">Klik untuk lihat</p>
-                        </div>
-                      </a>
-                    )}
-                    
-                    {selectedApp.documents.passportPhoto && (
-                      <a 
-                        href={selectedApp.documents.passportPhoto} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-3 border rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                      >
-                        <ImageIcon className="w-5 h-5 text-orange-600" />
-                        <div className="text-sm">
-                          <p className="font-medium">Gambar Passport</p>
-                          <p className="text-xs text-muted-foreground">Klik untuk lihat</p>
-                        </div>
-                      </a>
-                    )}
-                    
-                    {selectedApp.documents.tanggunganSignature && (
-                      <a 
-                        href={selectedApp.documents.tanggunganSignature} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="p-3 border rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
-                      >
-                        <FileText className="w-5 h-5 text-red-600" />
-                        <div className="text-sm">
-                          <p className="font-medium">Tandatangan Penjaga</p>
-                          <p className="text-xs text-muted-foreground">Klik untuk lihat</p>
-                        </div>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Tiada dokumen dimuat naik</p>
+                      )}
+                    </div>
+                  );
+                } catch (error) {
+                  console.error('Error parsing documents:', error);
+                  return (
+                    <div>
+                      <h4 className="font-semibold mb-3">Dokumen Yang Dimuat Naik</h4>
+                      <p className="text-sm text-muted-foreground">Tiada dokumen dimuat naik</p>
+                    </div>
+                  );
+                }
+              })()}
             </div>
           )}
         </DialogContent>
@@ -670,6 +637,79 @@ export default function AdminPanel() {
             >
               <XCircle className="w-4 h-4 mr-2" />
               Sahkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditMode} onOpenChange={setIsEditMode}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Kemaskini Maklumat Permohonan</DialogTitle>
+            <DialogDescription>No. Rujukan: {selectedApp?.ref_no}</DialogDescription>
+          </DialogHeader>
+          {editFormData && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">Nama</Label>
+                <Input
+                  id="edit-name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-email">E-mel</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-bahagian">Bahagian</Label>
+                <Input
+                  id="edit-bahagian"
+                  value={editFormData.bahagian}
+                  onChange={(e) => setEditFormData({ ...editFormData, bahagian: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-justification">Justifikasi</Label>
+                <Textarea
+                  id="edit-justification"
+                  value={editFormData.justification}
+                  onChange={(e) => setEditFormData({ ...editFormData, justification: e.target.value })}
+                  rows={4}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditMode(false)}>Batal</Button>
+            <Button onClick={async () => {
+              if (!selectedApp || !editFormData) return;
+              try {
+                const currentPemohon = typeof selectedApp.pemohon === 'string' ? JSON.parse(selectedApp.pemohon) : selectedApp.pemohon;
+                const updatedPemohon = {
+                  ...currentPemohon,
+                  name: editFormData.name,
+                  email: editFormData.email,
+                  bahagian: editFormData.bahagian,
+                  justification: editFormData.justification,
+                  assets: editFormData.assets
+                };
+                await updateApplication(selectedApp.id, { pemohon: updatedPemohon });
+                toast.success('Maklumat telah dikemaskini');
+                setIsEditMode(false);
+                loadApplications();
+              } catch (e) {
+                toast.error('Gagal mengemas kini maklumat');
+              }
+            }}>
+              Simpan Perubahan
             </Button>
           </DialogFooter>
         </DialogContent>

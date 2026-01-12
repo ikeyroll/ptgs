@@ -22,17 +22,17 @@ export default function PermohonanPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     icNumber: '',
-    okuNumber: '',
+    department: '',
     phone: '',
     email: '',
     address: '',
-    plateNumber: '',
-    vehicleType: '',
+    equipmentType: '',
+    purpose: '',
   });
   const [files, setFiles] = useState({
     icCopy: null as File | null,
-    okuCard: null as File | null,
-    grant: null as File | null,
+    justification: null as File | null,
+    approval: null as File | null,
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -49,7 +49,7 @@ export default function PermohonanPage() {
 
     // Simulate API call
     setTimeout(() => {
-      const generatedRef = `OKU${Date.now().toString().slice(-8)}`;
+      const generatedRef = `ICT${Date.now().toString().slice(-8)}`;
       setRefNumber(generatedRef);
       setSubmitted(true);
       setLoading(false);
@@ -93,17 +93,17 @@ export default function PermohonanPage() {
                       setFormData({
                         fullName: '',
                         icNumber: '',
-                        okuNumber: '',
+                        department: '',
                         phone: '',
                         email: '',
                         address: '',
-                        plateNumber: '',
-                        vehicleType: '',
+                        equipmentType: '',
+                        purpose: '',
                       });
                       setFiles({
                         icCopy: null,
-                        okuCard: null,
-                        grant: null,
+                        justification: null,
+                        approval: null,
                       });
                     }}>
                       {language === 'ms' ? 'Permohonan Baru' : 'New Application'}
@@ -131,9 +131,9 @@ export default function PermohonanPage() {
             <div className="mb-8">
               <h1 className="text-3xl sm:text-4xl font-bold mb-2">{t('form.title')}</h1>
               <p className="text-muted-foreground">
-                {language === 'ms'
-                  ? 'Sila lengkapkan borang di bawah untuk memohon pelekat OKU'
-                  : 'Please complete the form below to apply for an OKU sticker'}
+                {language === 'ms' 
+                  ? 'Sila lengkapkan borang di bawah untuk memohon peralatan ICT'
+                  : 'Please complete the form below to apply for ICT equipment'}
               </p>
             </div>
 
@@ -168,12 +168,12 @@ export default function PermohonanPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="okuNumber">{t('form.okuNumber')} *</Label>
+                      <Label htmlFor="department">{t('form.department')} *</Label>
                       <Input
-                        id="okuNumber"
+                        id="department"
                         required
-                        value={formData.okuNumber}
-                        onChange={(e) => handleInputChange('okuNumber', e.target.value)}
+                        value={formData.department}
+                        onChange={(e) => handleInputChange('department', e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -212,39 +212,32 @@ export default function PermohonanPage() {
                 </CardContent>
               </Card>
 
-              {/* Vehicle Information */}
+              {/* Equipment Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('form.vehicleInfo')}</CardTitle>
+                  <CardTitle>{t('form.equipmentInfo')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="plateNumber">{t('form.plateNumber')} *</Label>
+                      <Label htmlFor="equipmentType">{t('form.equipmentType')} *</Label>
                       <Input
-                        id="plateNumber"
+                        id="equipmentType"
                         required
-                        placeholder="ABC 1234"
-                        value={formData.plateNumber}
-                        onChange={(e) => handleInputChange('plateNumber', e.target.value.toUpperCase())}
+                        placeholder={language === 'ms' ? 'Contoh: Komputer Riba' : 'e.g. Laptop'}
+                        value={formData.equipmentType}
+                        onChange={(e) => handleInputChange('equipmentType', e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="vehicleType">{t('form.vehicleType')} *</Label>
-                      <Select
-                        value={formData.vehicleType}
-                        onValueChange={(value) => handleInputChange('vehicleType', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={language === 'ms' ? 'Pilih jenis kenderaan' : 'Select vehicle type'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="car">{language === 'ms' ? 'Kereta' : 'Car'}</SelectItem>
-                          <SelectItem value="motorcycle">{language === 'ms' ? 'Motosikal' : 'Motorcycle'}</SelectItem>
-                          <SelectItem value="van">{language === 'ms' ? 'Van' : 'Van'}</SelectItem>
-                          <SelectItem value="truck">{language === 'ms' ? 'Lori' : 'Truck'}</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="purpose">{t('form.equipmentPurpose')} *</Label>
+                      <Input
+                        id="purpose"
+                        required
+                        placeholder={language === 'ms' ? 'Tujuan penggunaan' : 'Purpose of use'}
+                        value={formData.purpose}
+                        onChange={(e) => handleInputChange('purpose', e.target.value)}
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -277,32 +270,32 @@ export default function PermohonanPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="okuCard">{t('form.okuCard')} *</Label>
+                    <Label htmlFor="justification">{t('form.justification')} *</Label>
                     <div className="flex items-center gap-4">
                       <Input
-                        id="okuCard"
+                        id="justification"
                         type="file"
                         accept="image/*,.pdf"
                         required
-                        onChange={(e) => handleFileChange('okuCard', e.target.files?.[0] || null)}
+                        onChange={(e) => handleFileChange('justification', e.target.files?.[0] || null)}
                         className="flex-1"
                       />
-                      {files.okuCard && <CheckCircle className="h-5 w-5 text-primary" />}
+                      {files.justification && <CheckCircle className="h-5 w-5 text-primary" />}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="grant">{t('form.grant')} *</Label>
+                    <Label htmlFor="approval">{t('form.approval')} *</Label>
                     <div className="flex items-center gap-4">
                       <Input
-                        id="grant"
+                        id="approval"
                         type="file"
                         accept="image/*,.pdf"
                         required
-                        onChange={(e) => handleFileChange('grant', e.target.files?.[0] || null)}
+                        onChange={(e) => handleFileChange('approval', e.target.files?.[0] || null)}
                         className="flex-1"
                       />
-                      {files.grant && <CheckCircle className="h-5 w-5 text-primary" />}
+                      {files.approval && <CheckCircle className="h-5 w-5 text-primary" />}
                     </div>
                   </div>
                 </CardContent>

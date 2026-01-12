@@ -63,19 +63,40 @@ export default function PendaftaranPage() {
       return;
     }
 
+    // Validate file sizes (max 5MB per file)
+    if (docs && docs.length > 0) {
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      for (let i = 0; i < docs.length; i++) {
+        if (docs[i].size > maxSize) {
+          alert(`Fail "${docs[i].name}" melebihi saiz maksimum 5MB. Sila pilih fail yang lebih kecil.`);
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     try {
-      // Upload documents (optional)
+      // Upload documents (optional) - continue even if upload fails
       let documents: any = {};
       if (docs && docs.length > 0) {
-        const uploads = await Promise.all(
-          Array.from(docs).map(async (file, idx) => {
-            const path = `pendaftaran/${Date.now()}_${idx}_${file.name}`;
-            const url = await uploadFile(file as File, path);
-            return { name: file.name, url };
-          })
-        );
-        documents.uploads = uploads;
+        try {
+          const uploads = await Promise.all(
+            Array.from(docs).map(async (file, idx) => {
+              try {
+                const path = `pendaftaran/${Date.now()}_${idx}_${file.name}`;
+                const url = await uploadFile(file as File, path);
+                return { name: file.name, url };
+              } catch (uploadErr) {
+                console.warn('Failed to upload file:', file.name, uploadErr);
+                return { name: file.name, url: null, error: 'Upload failed' };
+              }
+            })
+          );
+          documents.uploads = uploads;
+        } catch (uploadErr) {
+          console.warn('Document upload failed, continuing without documents:', uploadErr);
+          documents.uploads = [];
+        }
       }
 
       // Generate a reference number
@@ -110,7 +131,7 @@ export default function PendaftaranPage() {
       }, 2000);
     } catch (err) {
       console.error(err);
-      alert('Ralat semasa menghantar permohonan.');
+      alert('Ralat semasa menghantar permohonan. Sila cuba lagi.');
     } finally {
       setLoading(false);
     }
