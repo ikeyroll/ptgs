@@ -39,18 +39,33 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('documents', 'documents', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Allow public read access to documents" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated uploads to documents" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public uploads to documents" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Enable insert for all users" ON storage.objects;
+
 -- Set up storage policies for the documents bucket
-CREATE POLICY IF NOT EXISTS "Allow public read access to documents"
+-- Allow anyone to read files from documents bucket
+CREATE POLICY "Public read access for documents bucket"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'documents');
 
-CREATE POLICY IF NOT EXISTS "Allow authenticated uploads to documents"
+-- Allow anyone to upload files to documents bucket
+CREATE POLICY "Public insert access for documents bucket"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'documents');
 
-CREATE POLICY IF NOT EXISTS "Allow public uploads to documents"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'documents');
+-- Allow anyone to update files in documents bucket
+CREATE POLICY "Public update access for documents bucket"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'documents');
+
+-- Allow anyone to delete files in documents bucket (optional - for admin cleanup)
+CREATE POLICY "Public delete access for documents bucket"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'documents');
 
 -- ================================================================================
 -- VERIFICATION

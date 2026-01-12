@@ -477,6 +477,8 @@ export async function getApplicationsForExport(dateFrom: Date, dateTo: Date) {
 
 // Upload file to Supabase Storage
 export async function uploadFile(file: File, path: string) {
+  console.log('Uploading file:', file.name, 'to path:', path);
+  
   const { data, error } = await supabase.storage
     .from('documents')
     .upload(path, file, {
@@ -484,12 +486,19 @@ export async function uploadFile(file: File, path: string) {
       upsert: false
     });
   
-  if (error) throw error;
+  if (error) {
+    console.error('Upload error:', error);
+    throw new Error(`Failed to upload ${file.name}: ${error.message}`);
+  }
+  
+  console.log('Upload successful:', data);
   
   // Get public URL
   const { data: urlData } = supabase.storage
     .from('documents')
     .getPublicUrl(path);
+  
+  console.log('Public URL:', urlData.publicUrl);
   
   return urlData.publicUrl;
 }
